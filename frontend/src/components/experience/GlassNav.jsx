@@ -1,30 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX } from "lucide-react";
-import { CHAPTERS } from "../../data/assets";
 import { useAudio } from "../../hooks/useAudio";
-import { NAV, CTA } from "../../constants/testIds";
+import { NAV } from "../../constants/testIds";
+import { useCamera, currentChapter } from "../../engine";
 
 export default function GlassNav({ onBook }) {
   const { enabled, toggle } = useAudio();
-  const [progress, setProgress] = useState(0);
-  const [chapterIdx, setChapterIdx] = useState(0);
+  const camera = useCamera();
+
+  const progressRef = useRef(null);
+  const chapterRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => {
-      const h = document.documentElement.scrollHeight - window.innerHeight;
-      const p = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
-      setProgress(p);
-      // 5 chapters mapped across scroll progress
-      const idx = Math.min(CHAPTERS.length - 1, Math.floor(p * CHAPTERS.length));
-      setChapterIdx(idx);
-      setVisible(window.scrollY > 60);
-    };
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    // Subscribe once — imperative updates from camera, zero re-renders.
+    return camera.subscribe((cam) => {
+      if (progressRef.current) {
+        progressRef.current.style.width = `${cam.progress * 100}%`;
+      }
+      if (chapterRef.current) {
+        const c = currentChapter(cam.z);
+        const target = `${c.id} — ${c.label}`;
+        if (chapterRef.current.textContent !== target) {
+          chapterRef.current.textContent = target;
+        }
+      }
+      // Nav reveals after ~5% into the walk (the intro has lifted by then).
+      setVisible((prev) => {
+        const next = cam.progress > 0.008;
+        return prev === next ? prev : next;
+      });
+    });
+  }, [camera]);
 
   return (
     <AnimatePresence>
@@ -38,7 +46,6 @@ export default function GlassNav({ onBook }) {
           className="fixed top-6 left-1/2 z-[9000] -translate-x-1/2 w-[min(1180px,calc(100%-3rem))]"
         >
           <div className="hm-glass-light flex items-center justify-between rounded-full px-6 py-3">
-            {/* Logo */}
             <a
               data-testid={NAV.logo}
               href="#top"
@@ -54,18 +61,19 @@ export default function GlassNav({ onBook }) {
               </span>
             </a>
 
-            {/* Chapter progress */}
             <div className="hidden md:flex items-center gap-3" data-testid={NAV.progress}>
               <span
+                ref={chapterRef}
                 data-testid={NAV.chapter}
                 className="font-body text-[11px] uppercase tracking-[0.28em] text-[#123524]"
               >
-                {CHAPTERS[chapterIdx].id} — {CHAPTERS[chapterIdx].label}
+                01 — The Land
               </span>
               <div className="relative h-[2px] w-32 overflow-hidden rounded-full bg-[#123524]/15">
                 <div
-                  className="absolute inset-y-0 left-0 bg-[#C6A35A] transition-[width] duration-300"
-                  style={{ width: `${progress * 100}%` }}
+                  ref={progressRef}
+                  className="absolute inset-y-0 left-0 bg-[#C6A35A]"
+                  style={{ width: "0%" }}
                 />
               </div>
             </div>
@@ -101,5 +109,3 @@ export default function GlassNav({ onBook }) {
     </AnimatePresence>
   );
 }
-
-export { CTA };

@@ -1,107 +1,88 @@
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useCallback, useRef } from "react";
 import { IMAGES } from "../../data/assets";
 import { SCENE } from "../../constants/testIds";
 import { useAudio } from "../../hooks/useAudio";
-
-gsap.registerPlugin(ScrollTrigger);
+import { Scene, Layer, useSceneAnimation, WORLD } from "../../engine";
 
 /**
- * Scene 2 — Entrance.
- * Camera dollies into the door, blur transition, lighting shifts from
- * cool exterior to warm interior. Two layered plates crossfade.
+ * Scene 2 — Entrance. Camera walks toward the door, blur transition to
+ * warm interior. Composed as a real Z-stack: door plate at negative Z
+ * (far), interior glow at deeper negative Z (further behind the door),
+ * bloom at near Z (in front of camera).
  */
 export default function SceneEntrance() {
   const rootRef = useRef(null);
   const { setScene } = useAudio();
 
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+  const build = useCallback((tl, root) => {
+    tl.to(root.querySelector(".ent-door"),     { scale: 2.6, z: 380 }, 0);
+    tl.to(root.querySelector(".ent-door"),     { filter: "blur(28px)" }, 0.4);
+    tl.to(root.querySelector(".ent-copy"),     { opacity: 0, yPercent: -18 }, 0.05);
+    tl.to(root.querySelector(".ent-interior"), { opacity: 1, scale: 1.06 }, 0.42);
+    tl.to(root.querySelector(".ent-warmth"),   { opacity: 1 }, 0.5);
+    tl.to(root.querySelector(".ent-bloom"),    { opacity: 1, scale: 1.25 }, 0.55);
+  }, []);
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: root,
-          start: "top top",
-          end: "+=220%",
-          scrub: 1,
-          pin: true,
-          anticipatePin: 1,
-          onEnter: () => setScene("entrance"),
-          onEnterBack: () => setScene("entrance"),
-        },
-      });
-
-      // Camera dolly-in on the door
-      tl.to(".ent-door", { scale: 2.6, ease: "none" }, 0)
-        .to(".ent-door", { filter: "blur(24px)", ease: "none" }, 0.35)
-        .to(".ent-copy", { opacity: 0, yPercent: -20, ease: "power2.in" }, 0.05)
-        // Interior plate crossfade
-        .to(".ent-interior", { opacity: 1, scale: 1.05, ease: "none" }, 0.4)
-        .to(".ent-warmth", { opacity: 1, ease: "none" }, 0.5)
-        // Door split light bloom
-        .to(".ent-bloom", { opacity: 1, scale: 1.2, ease: "none" }, 0.55);
-    }, root);
-
-    return () => ctx.revert();
-  }, [setScene]);
+  useSceneAnimation({
+    worldZ: WORLD.entrance.worldZ,
+    depth: WORLD.entrance.depth,
+    rootRef,
+    buildTimeline: build,
+    onEnter: () => setScene("entrance"),
+  });
 
   return (
-    <section
-      ref={rootRef}
-      data-testid={SCENE.entrance}
-      className="relative h-screen w-full overflow-hidden bg-[#0b0b0b]"
-    >
-      {/* Exterior door plate */}
-      <div className="absolute inset-0 hm-perspective">
+    <Scene ref={rootRef} data-testid={SCENE.entrance} background="#0b0b0b">
+      {/* Interior glow — sits BEHIND the door plate in Z */}
+      <Layer role="background" depth={-900} className="ent-interior" style={{ opacity: 0 }}>
+        <img src={IMAGES.entrance.interiorGlow} alt="" aria-hidden="true" className="h-full w-full object-cover" />
+        <div
+          className="ent-warmth absolute inset-0 opacity-0"
+          style={{ background: "radial-gradient(circle at 50% 45%, rgba(198,163,90,0.4), transparent 60%)" }}
+        />
+      </Layer>
+
+      {/* Door plate — the wall between us and the interior */}
+      <Layer role="architecture" depth={-200} className="ent-door">
         <img
           src={IMAGES.entrance.exteriorDoor}
           alt="Approaching the front door"
-          className="ent-door absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover"
           style={{ transformOrigin: "50% 55%" }}
         />
-      </div>
+      </Layer>
 
-      {/* Interior warm plate — hidden until scroll */}
-      <div className="ent-interior absolute inset-0 opacity-0">
-        <img
-          src={IMAGES.entrance.interiorGlow}
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover"
+      {/* Door light bloom — sits closer to the camera */}
+      <Layer role="particles" depth={80} className="ent-bloom" style={{ opacity: 0 }}>
+        <div
+          className="absolute left-1/2 top-1/2 h-[70vh] w-[70vh] -translate-x-1/2 -translate-y-1/2 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(255,236,190,0.55), rgba(255,236,190,0) 65%)" }}
         />
-        <div className="ent-warmth absolute inset-0 opacity-0" style={{
-          background: "radial-gradient(circle at 50% 45%, rgba(198,163,90,0.35), transparent 60%)",
-        }} />
-      </div>
+      </Layer>
 
-      {/* Door light bloom */}
-      <div className="ent-bloom pointer-events-none absolute left-1/2 top-1/2 h-[70vh] w-[70vh] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0" style={{
-        background: "radial-gradient(circle, rgba(255,236,190,0.55), rgba(255,236,190,0) 65%)",
-      }} />
-
-      {/* Copy */}
-      <div className="ent-copy absolute inset-0 flex flex-col justify-between p-8 md:p-14 text-[#FAF8F5]">
-        <div className="flex items-center justify-between font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/70">
-          <span>Chapter 02</span>
-          <span className="text-[#C6A35A]">The Threshold</span>
-        </div>
-
-        <div className="max-w-2xl">
-          <div className="mb-5 font-body text-[10px] uppercase tracking-[0.4em] text-[#C6A35A]">
-            02 — Enter
+      {/* UI copy plane */}
+      <Layer role="ui" depth={200} className="ent-copy">
+        <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-14 text-[#FAF8F5]">
+          <div className="flex items-center justify-between font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/70">
+            <span>Chapter 02</span>
+            <span className="text-[#C6A35A]">The Threshold</span>
           </div>
-          <h2 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight">
-            Step across.<br /><span className="italic text-[#C6A35A]">Everything softens.</span>
-          </h2>
-        </div>
 
-        <div className="font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/60">
-          Keep scrolling ↓
+          <div className="max-w-2xl">
+            <div className="mb-5 font-body text-[10px] uppercase tracking-[0.4em] text-[#C6A35A]">
+              02 — Enter
+            </div>
+            <h2 className="font-display text-5xl md:text-7xl leading-[0.95] tracking-tight">
+              Step across.<br />
+              <span className="italic text-[#C6A35A]">Everything softens.</span>
+            </h2>
+          </div>
+
+          <div className="font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/60">
+            Keep scrolling ↓
+          </div>
         </div>
-      </div>
-    </section>
+      </Layer>
+    </Scene>
   );
 }

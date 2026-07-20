@@ -1,132 +1,130 @@
-import { useEffect, useRef } from "react";
-import { gsap } from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useCallback, useRef } from "react";
 import { IMAGES } from "../../data/assets";
 import { SCENE } from "../../constants/testIds";
 import { useAudio } from "../../hooks/useAudio";
-
-gsap.registerPlugin(ScrollTrigger);
+import { Scene, Layer, useSceneAnimation, WORLD } from "../../engine";
 
 /**
- * Scene 1 — Hero Exterior.
- * Layered parallax (sky, hills, mist, house, foreground) driven by scroll.
- * Pinned 100vh × ~3 for the dolly-in.
+ * Scene 1 — Hero Exterior. Continuous-world scene.
+ *
+ * Composition (near → far in the perspective stack):
+ *   ui        (copy overlay)
+ *   foreground (dark gradient falloff at bottom)
+ *   architecture (the house, mask-blended into the land)
+ *   mist       (soft haze)
+ *   hills      (mid-ground landscape)
+ *   background (distant sky)
+ *
+ * Camera walk-through: as local progress advances the camera translates
+ * forward — hills/sky drift up slightly, the house grows, the mist thins,
+ * a vignette closes in. All motion is driven by camera progress, no pin.
  */
-export default function SceneExterior({ onEnter }) {
+export default function SceneExterior() {
   const rootRef = useRef(null);
   const { setScene } = useAudio();
 
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
+  const build = useCallback((tl, root) => {
+    tl.to(root.querySelector(".ext-sky"),      { yPercent: -10, scale: 1.12 }, 0);
+    tl.to(root.querySelector(".ext-hills"),    { yPercent: -18, scale: 1.18 }, 0);
+    tl.to(root.querySelector(".ext-mist"),     { yPercent: -8,  opacity: 0.25 }, 0);
+    tl.to(root.querySelector(".ext-house"),    { scale: 1.6,   yPercent: 4, z: 240 }, 0);
+    tl.to(root.querySelector(".ext-foreground"), { yPercent: -30, scale: 1.2 }, 0);
+    tl.to(root.querySelector(".ext-vignette"), { opacity: 1 }, 0.4);
+    tl.to(root.querySelector(".ext-copy"),     { opacity: 0, yPercent: -14 }, 0.55);
+  }, []);
 
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: root,
-          start: "top top",
-          end: "+=280%",
-          scrub: 1.1,
-          pin: true,
-          anticipatePin: 1,
-          onEnter: () => setScene("exterior"),
-          onEnterBack: () => setScene("exterior"),
-        },
-      });
-
-      tl.to(".ext-sky", { yPercent: -8, scale: 1.08, ease: "none" }, 0)
-        .to(".ext-hills", { yPercent: -14, scale: 1.14, ease: "none" }, 0)
-        .to(".ext-mist", { yPercent: -6, opacity: 0.35, ease: "none" }, 0)
-        .to(".ext-house", { scale: 1.9, yPercent: 6, ease: "none" }, 0)
-        .to(".ext-foreground", { yPercent: -40, scale: 1.25, ease: "none" }, 0)
-        .to(".ext-copy", { opacity: 0, yPercent: -20, ease: "power2.in" }, 0.05)
-        .to(".ext-vignette", { opacity: 1, ease: "none" }, 0.4);
-
-      // gentle drifting breathing on the whole stack
-      gsap.to(".ext-stack", {
-        y: 8,
-        duration: 6,
-        repeat: -1,
-        yoyo: true,
-        ease: "sine.inOut",
-      });
-    }, root);
-
-    return () => ctx.revert();
-  }, [setScene]);
+  useSceneAnimation({
+    worldZ: WORLD.exterior.worldZ,
+    depth: WORLD.exterior.depth,
+    rootRef,
+    buildTimeline: build,
+    onEnter: () => setScene("exterior"),
+  });
 
   return (
-    <section
-      ref={rootRef}
-      data-testid={SCENE.exterior}
-      className="relative h-screen w-full overflow-hidden bg-[#0f1a13]"
-    >
-      <div className="ext-stack absolute inset-0 hm-perspective">
+    <Scene ref={rootRef} data-testid={SCENE.exterior} background="#0f1a13">
+      {/* Distant sky */}
+      <Layer role="background" depth={-1200} className="ext-sky">
         <img
           src={IMAGES.exterior.sky}
           alt=""
           aria-hidden="true"
-          className="ext-sky absolute inset-0 h-full w-full object-cover"
-          style={{ transform: "translateZ(-400px) scale(1.6)" }}
+          className="h-full w-full object-cover"
+          style={{ transform: "scale(1.7)" }}
         />
+      </Layer>
+
+      {/* Mid-ground hills */}
+      <Layer role="architecture" depth={-700} className="ext-hills">
         <img
           src={IMAGES.exterior.hills}
           alt=""
           aria-hidden="true"
-          className="ext-hills absolute inset-0 h-full w-full object-cover"
-          style={{ transform: "translateZ(-200px) scale(1.2)" }}
+          className="h-full w-full object-cover"
+          style={{ transform: "scale(1.25)" }}
         />
-        <div className="ext-mist absolute inset-0 bg-gradient-to-b from-white/30 via-white/10 to-transparent" />
+      </Layer>
+
+      {/* Atmospheric haze */}
+      <Layer role="particles" depth={-300} className="ext-mist">
+        <div className="absolute inset-0 bg-gradient-to-b from-white/35 via-white/12 to-transparent" />
+      </Layer>
+
+      {/* The house — foreground focal point */}
+      <Layer role="furniture" depth={-120} className="ext-house">
         <img
           src={IMAGES.exterior.house}
           alt="Modular home in the Irish countryside"
-          className="ext-house absolute left-1/2 top-1/2 h-[85%] max-h-[820px] w-auto -translate-x-1/2 -translate-y-[50%] object-cover"
+          className="absolute left-1/2 top-1/2 h-[86%] max-h-[820px] w-auto -translate-x-1/2 -translate-y-[50%] object-cover"
           style={{
-            WebkitMaskImage: "radial-gradient(ellipse 62% 78% at 50% 55%, black 40%, transparent 95%)",
-            maskImage: "radial-gradient(ellipse 62% 78% at 50% 55%, black 40%, transparent 95%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 62% 78% at 50% 55%, black 40%, transparent 95%)",
+            maskImage:
+              "radial-gradient(ellipse 62% 78% at 50% 55%, black 40%, transparent 95%)",
             filter: "drop-shadow(0 60px 100px rgba(0,0,0,0.65))",
           }}
         />
-        <div className="ext-foreground absolute inset-x-0 bottom-0 h-[38%] bg-gradient-to-t from-[#0f1a13] via-[#0f1a13]/70 to-transparent" />
-      </div>
+      </Layer>
+
+      {/* Ground falloff */}
+      <Layer role="foreground" depth={40} className="ext-foreground">
+        <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-[#0f1a13] via-[#0f1a13]/70 to-transparent" />
+      </Layer>
 
       {/* Vignette */}
-      <div className="ext-vignette pointer-events-none absolute inset-0 opacity-70" style={{
-        background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%)",
-      }} />
+      <div
+        className="ext-vignette pointer-events-none absolute inset-0 opacity-70"
+        style={{ background: "radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.6) 100%)" }}
+      />
 
-      {/* Copy overlay */}
-      <div className="ext-copy absolute inset-0 flex flex-col justify-between p-8 md:p-14 text-[#FAF8F5]">
-        <div className="flex items-center justify-between font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/70">
-          <span>Chapter 01</span>
-          <span className="text-[#C6A35A]">The Land</span>
-        </div>
-
-        <div className="max-w-3xl">
-          <div className="mb-5 font-body text-[10px] uppercase tracking-[0.4em] text-[#C6A35A]">
-            County Wicklow · 07:14
+      {/* UI plane */}
+      <Layer role="ui" depth={200} className="ext-copy">
+        <div className="absolute inset-0 flex flex-col justify-between p-8 md:p-14 text-[#FAF8F5]">
+          <div className="flex items-center justify-between font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/70">
+            <span>Chapter 01</span>
+            <span className="text-[#C6A35A]">The Land</span>
           </div>
-          <h2 className="font-display text-5xl md:text-7xl lg:text-[7.2rem] leading-[0.95] tracking-tight">
-            A morning<br />that <span className="italic text-[#C6A35A]">holds</span> its breath.
-          </h2>
-          <p className="mt-6 max-w-md font-body text-sm md:text-base text-[#FAF8F5]/75 leading-relaxed">
-            Mist over the fields. A modular house, patient in the valley.
-            Keep scrolling — the door is already open.
-          </p>
-        </div>
 
-        <div className="flex items-end justify-between font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/60">
-          <span className="hidden md:inline">Scroll ↓</span>
-          <button
-            onClick={onEnter}
-            data-cursor="cta"
-            data-cursor-label="Skip"
-            className="rounded-full border border-[#FAF8F5]/25 px-4 py-1.5 text-[#FAF8F5]/75 hover:text-[#C6A35A] hover:border-[#C6A35A] transition-colors"
-          >
-            Skip intro
-          </button>
+          <div className="max-w-3xl">
+            <div className="mb-5 font-body text-[10px] uppercase tracking-[0.4em] text-[#C6A35A]">
+              County Wicklow · 07:14
+            </div>
+            <h2 className="font-display text-5xl md:text-7xl lg:text-[7.2rem] leading-[0.95] tracking-tight">
+              A morning<br />
+              that <span className="italic text-[#C6A35A]">holds</span> its breath.
+            </h2>
+            <p className="mt-6 max-w-md font-body text-sm md:text-base text-[#FAF8F5]/75 leading-relaxed">
+              Mist over the fields. A modular house, patient in the valley.
+              Keep scrolling — the door is already open.
+            </p>
+          </div>
+
+          <div className="flex items-end justify-between font-body text-[10px] uppercase tracking-[0.32em] text-[#FAF8F5]/60">
+            <span className="hidden md:inline">Scroll ↓</span>
+            <span className="text-[#FAF8F5]/50">Continuous walk enabled</span>
+          </div>
         </div>
-      </div>
-    </section>
+      </Layer>
+    </Scene>
   );
 }

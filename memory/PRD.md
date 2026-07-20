@@ -1,64 +1,54 @@
-# Home Modular Ireland — Cinematic Storytelling Experience (POC)
-
-## Problem Statement (verbatim excerpt)
-Award-winning cinematic Proof of Concept. Not a marketing site. A scroll-driven immersive walkthrough of a luxury modular home using GSAP + Lenis + Framer Motion + CSS pseudo-3D. Awwwards Site-of-the-Day quality.
+# Home Modular Ireland — Cinematic Walkthrough (POC)
 
 ## Stack
-- React 19 + CRA (Craco)
-- GSAP 3.15 + ScrollTrigger
-- Lenis 1.3 (smooth scroll)
-- Framer Motion 11
-- TailwindCSS 3.4 + shadcn/ui (only sonner used)
-- Locked palette: #123524 primary · #C6A35A accent · #FAF8F5 bg · #151515 dark · #777777 muted
-- Locked fonts: Cormorant Garamond (display) + Inter (body)
+React 19 + CRA · GSAP 3.15 (ScrollTrigger) · Lenis 1.3 · Framer Motion 11 · TailwindCSS 3.4
 
-## Architecture
-- `/src/components/experience/*` — the entire cinematic engine
-- `/src/data/assets.js` — CENTRAL asset registry (swap client photos here only)
-- `/src/data/hotspots.js` — structured hotspot data (schema reusable across rooms)
-- `/src/hooks/useLenis.js` — smooth scroll wired to GSAP ticker
-- `/src/hooks/useAudio.jsx` — modular audio manager (scene → track map)
+## Architecture — Continuous-World Engine (`/src/engine/`)
+- `CameraController.js` — single virtual camera (x, y, z, rotX, rotY, progress). Pub/sub, no React re-renders.
+- `CameraContext.jsx` — provides the camera to the tree.
+- `ScrollEngine.jsx` — one and only scroll listener. Lenis + direct progress calc → camera.setProgress.
+- `SceneManager.jsx` — fixed camera-root that hosts all scenes with shared perspective + the scroll spacer that defines walk length.
+- `Scene.jsx` — perspective-hosted room primitive (absolute inset-0, opacity driven).
+- `Layer.jsx` — depth stratum with auto scale-compensation for CSS perspective.
+- `TimelineFactory.js` — creates paused, unit-normalised GSAP timelines.
+- `useSceneAnimation.js` — hook that binds a scene's timeline to camera Z with edge-fade crossfades.
+- `world.js` — world Z registry & chapter markers.
 
-## Scene Registry (extensible — add future rooms here)
-1. IntroSequence — signature masked line reveal
-2. SceneExterior — layered parallax (sky/hills/mist/house/foreground)
-3. ManifestoChapter "01 — The Land"
-4. SceneEntrance — camera dolly + blur + warm bloom transition
-5. ManifestoChapter "02 — The Threshold" (reversed)
-6. SceneKitchen — horizontal camera pan + 3 material hotspots
-7. EditorialMarquee — slow "Crafted in Ireland · Modular · Timeless · Quietly Assembled"
-8. SceneLivingRoom — warm color grade + 2 material hotspots
-9. ManifestoChapter "03 — The Craft"
-10. SceneExitCTA — drone pullback + Book/Discover CTA + specs
+## World Coordinates (extensible — add rooms here)
+| Scene | worldZ | depth |
+|-------|--------|-------|
+| Exterior | 0 | 1600 |
+| Manifesto 01 The Land | 1500 | 1000 |
+| Entrance | 2400 | 1500 |
+| Manifesto 02 The Threshold | 3800 | 1000 |
+| Kitchen (primary) | 4700 | 2200 |
+| Editorial Marquee | 6800 | 900 |
+| Living Room | 7600 | 1700 |
+| Manifesto 03 The Craft | 9200 | 1000 |
+| Exit CTA / Book | 10100 | 1900 |
 
-## What's Been Implemented (2025-12)
-- Full 5-scene cinematic walkthrough
-- Signature intro on-load moment (line-by-line mask reveal)
-- Floating glass navigation with progress bar + chapter label
-- Custom cursor with expand-on-hover states (data-cursor attr)
-- Global film grain overlay
-- Extensible SceneManager pattern (each scene is an isolated component with own ScrollTrigger)
-- Data-driven MaterialHotspot component (reusable in any room)
-- Ambient audio system (muted by default, cross-fades per scene)
-- Booking dialog (frontend-only, toast confirmation) — MOCKED backend
-- Numbered manifesto chapters between scenes
-- Editorial marquee
-- Full responsive down to md breakpoint
-- All interactive elements carry `data-testid`
-- prefers-reduced-motion respected
+Total world depth: 12000. Adjacent scenes overlap 100 units for crossfade.
 
-## Not Implemented (Deferred)
-- Backend integration for booking form (currently shows toast)
-- Bedroom, Bathroom, Dining Room scenes (architecture supports easy addition)
-- CMS / real content management
-- Real audio files licensed by client
+## Adding a Room
+1. Add entry to `WORLD` in `/src/engine/world.js`.
+2. Create `SceneBedroom.jsx` inside `/src/components/experience/` using `Scene`, `Layer`, `useSceneAnimation`.
+3. Drop `<SceneBedroom />` into the `SceneManager` tree in `Experience.jsx`.
 
-## Prioritized Backlog
-- P1: Real client photography swap (edit `/src/data/assets.js` only)
-- P2: Add Bedroom + Bathroom scenes (drop into `Experience.jsx` scene list)
-- P2: Live booking backend + Resend email confirmation
-- P3: Reduced-motion static hero fallback
-- P3: i18n (Gaeilge / English toggle)
+## Locked Design
+- Palette: #123524 primary · #C6A35A accent · #FAF8F5 bg · #151515 dark · #777777 muted
+- Fonts: Cormorant Garamond (display) · Inter (body)
+- Custom cursor · film grain · glassmorphism nav · placeholder hotspot copy · ambient audio muted by default
+
+## What's Done (2025-12)
+- Continuous-world engine replaces per-scene ScrollTriggers with a single camera.
+- 5 hero scenes + 3 manifesto chapters + marquee, all crossfading through world Z.
+- Interactive material hotspots (Kitchen: oak / brass / limestone · Living: timber / windows).
+- Custom cursor, glass nav with chapter progress, ambient audio toggle, booking dialog (MOCKED).
+
+## Known Not Implemented
+- Bedroom, Bathroom, Dining scenes (engine supports easy addition).
+- Live booking backend (dialog currently shows toast only).
+- Real client photography (swap `/src/data/assets.js`).
 
 ## Test Credentials
 None — no auth in this POC.
