@@ -16,17 +16,17 @@ export default function SceneKitchen() {
   const { setScene } = useAudio();
 
   const build = useCallback((tl, root) => {
-    // Horizontal walking pan across the interior.
+    // Walking pan — longer travel with deeper Z push for real dolly weight.
     tl.fromTo(
       root.querySelector(".kit-plate"),
-      { xPercent: 0, scale: 1.14, z: -60 },
-      { xPercent: -22, scale: 1.02, z: 40 },
+      { xPercent: 0, scale: 1.18, z: -80 },
+      { xPercent: -24, scale: 1.02, z: 60 },
       0
     );
     tl.fromTo(
       root.querySelector(".kit-hotspots"),
       { xPercent: 0, opacity: 0 },
-      { xPercent: -22, opacity: 1 },
+      { xPercent: -24, opacity: 1 },
       0
     );
     tl.fromTo(

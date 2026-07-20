@@ -20,13 +20,14 @@ export default function SceneManager({ worldDepth, children, scrollLengthVh = 90
     const root = cameraRef.current;
     if (!root) return undefined;
 
-    // Apply subtle organic camera transform to the WHOLE stage.
-    // Because scenes are position:fixed inside this transformed ancestor,
-    // they inherit the sway automatically.
+    // The whole stage inherits organic sway + a forward-momentum push
+    // proportional to camera Z velocity. Because scenes are absolute
+    // inside this transformed ancestor, every layer inside every scene
+    // benefits automatically — the world feels weight-bearing.
     const apply = (cam) => {
       root.style.transform =
-        `translate3d(${cam.x}px, ${cam.y}px, 0) ` +
-        `rotateX(${cam.rotX}deg) rotateY(${cam.rotY}deg)`;
+        `translate3d(${cam.x.toFixed(2)}px, ${cam.y.toFixed(2)}px, ${cam.forward.toFixed(2)}px) ` +
+        `rotateX(${cam.rotX.toFixed(3)}deg) rotateY(${cam.rotY.toFixed(3)}deg)`;
     };
     return camera.subscribe(apply);
   }, [camera]);

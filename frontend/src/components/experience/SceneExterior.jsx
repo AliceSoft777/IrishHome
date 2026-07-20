@@ -24,11 +24,12 @@ export default function SceneExterior() {
   const { setScene } = useAudio();
 
   const build = useCallback((tl, root) => {
-    tl.to(root.querySelector(".ext-sky"),      { yPercent: -10, scale: 1.12 }, 0);
-    tl.to(root.querySelector(".ext-hills"),    { yPercent: -18, scale: 1.18 }, 0);
-    tl.to(root.querySelector(".ext-mist"),     { yPercent: -8,  opacity: 0.25 }, 0);
-    tl.to(root.querySelector(".ext-house"),    { scale: 1.6,   yPercent: 4, z: 240 }, 0);
-    tl.to(root.querySelector(".ext-foreground"), { yPercent: -30, scale: 1.2 }, 0);
+    // Deep parallax gradient — sky barely moves, foreground rushes past.
+    tl.to(root.querySelector(".ext-sky"),      { yPercent: -4,  scale: 1.05 }, 0);
+    tl.to(root.querySelector(".ext-hills"),    { yPercent: -14, scale: 1.16 }, 0);
+    tl.to(root.querySelector(".ext-mist"),     { yPercent: -10, opacity: 0.22 }, 0);
+    tl.to(root.querySelector(".ext-house"),    { scale: 1.9,   yPercent: 6, z: 340 }, 0);
+    tl.to(root.querySelector(".ext-foreground"), { yPercent: -58, scale: 1.42 }, 0);
     tl.to(root.querySelector(".ext-vignette"), { opacity: 1 }, 0.4);
     tl.to(root.querySelector(".ext-copy"),     { opacity: 0, yPercent: -14 }, 0.55);
   }, []);

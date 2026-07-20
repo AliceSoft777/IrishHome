@@ -15,22 +15,23 @@ export default function SceneLivingRoom() {
   const { setScene } = useAudio();
 
   const build = useCallback((tl, root) => {
+    // Deeper pull-back so the room "opens up" as we settle.
     tl.fromTo(
       root.querySelector(".liv-plate"),
-      { scale: 1.32, z: -80 },
-      { scale: 1.02, z: 20 },
+      { scale: 1.42, z: -110 },
+      { scale: 1.0, z: 30 },
       0
     );
     tl.fromTo(
       root.querySelector(".liv-window"),
-      { opacity: 0, xPercent: 18 },
+      { opacity: 0, xPercent: 22 },
       { opacity: 1, xPercent: 0 },
       0
     );
     tl.fromTo(
       root.querySelector(".liv-warm"),
       { opacity: 0 },
-      { opacity: 0.35 },
+      { opacity: 0.38 },
       0
     );
     tl.fromTo(

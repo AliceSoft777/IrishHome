@@ -15,12 +15,13 @@ export default function SceneEntrance() {
   const { setScene } = useAudio();
 
   const build = useCallback((tl, root) => {
-    tl.to(root.querySelector(".ent-door"),     { scale: 2.6, z: 380 }, 0);
-    tl.to(root.querySelector(".ent-door"),     { filter: "blur(28px)" }, 0.4);
+    // Deep dolly-in — the door plate pushes forward in Z with a real weight.
+    tl.to(root.querySelector(".ent-door"),     { scale: 2.9, z: 460 }, 0);
+    tl.to(root.querySelector(".ent-door"),     { filter: "blur(32px)" }, 0.4);
     tl.to(root.querySelector(".ent-copy"),     { opacity: 0, yPercent: -18 }, 0.05);
-    tl.to(root.querySelector(".ent-interior"), { opacity: 1, scale: 1.06 }, 0.42);
+    tl.to(root.querySelector(".ent-interior"), { opacity: 1, scale: 1.08 }, 0.42);
     tl.to(root.querySelector(".ent-warmth"),   { opacity: 1 }, 0.5);
-    tl.to(root.querySelector(".ent-bloom"),    { opacity: 1, scale: 1.25 }, 0.55);
+    tl.to(root.querySelector(".ent-bloom"),    { opacity: 1, scale: 1.35 }, 0.55);
   }, []);
 
   useSceneAnimation({
