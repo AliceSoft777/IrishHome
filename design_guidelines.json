@@ -1,0 +1,136 @@
+{
+  "project_name": "Home Modular Ireland - Cinematic Storytelling Experience",
+  "art_direction_thesis": "The Cinematic Walkthrough: A singular, scroll-driven narrative that contrasts the organic, misty Irish landscape with the precision of high-end Scandinavian modular architecture. The design acts as an interactive film—a pseudo-3D space utilizing CSS transforms, layered parallax, and dynamic lighting to simulate physical presence, walking momentum, and tactile exploration without relying on WebGL.",
+  "theme": "dark",
+  "typography": {
+    "fonts": {
+      "heading": "Cormorant Garamond",
+      "body": "Inter"
+    },
+    "scale": {
+      "H1": "text-6xl md:text-8xl tracking-tight leading-[0.9]",
+      "H2": "text-4xl md:text-5xl tracking-tight leading-none",
+      "H3": "text-2xl md:text-3xl leading-snug",
+      "body": "text-base md:text-lg leading-relaxed text-[#777777]",
+      "chapter_numeral": "text-xs md:text-sm tracking-[0.2em] uppercase text-[#C6A35A]",
+      "hotspot_label": "text-xs tracking-[0.1em] uppercase font-bold text-[#FFFFFF]",
+      "marquee": "text-5xl md:text-7xl tracking-widest uppercase font-light text-[#123524]"
+    },
+    "notes": "LOCKED by client. DO NOT CHANGE fonts. Use Cormorant Garamond for display/headings. Inter for UI, body, labels, and micro-copy."
+  },
+  "colors": {
+    "primary": "#123524",
+    "accent": "#C6A35A",
+    "background": "#FAF8F5",
+    "dark": "#151515",
+    "white": "#FFFFFF",
+    "muted": "#777777",
+    "notes": "LOCKED. #123524 (Deep Forest Green) is used for high-impact surfaces. #C6A35A (Warm Brass) for active states and accents. #FAF8F5 (Warm Off-White) for light sections."
+  },
+  "visual_enhancers": {
+    "grain_noise_recipe": "Fixed position pointer-events-none overlay with a base64 noise background (opacity 0.03 - 0.05). Adds a filmic, cinematic texture to kill digital flatness.",
+    "lighting_overlays": "Use radial-gradient overlays (opacity-30 to opacity-60) tied to mouse movement to simulate a soft spotlight on product photography.",
+    "cursor_treatment": "Custom cursor: a small precise dot by default. When hovering over a hotspot, the cursor expands into a glowing ring or 'Explore' label.",
+    "glassmorphism_spec": "backdrop-blur-2xl bg-white/10 (dark mode) or bg-black/5 (light mode), 1px solid border border-white/20, shadow-[0_8px_32px_rgba(0,0,0,0.12)]. Inner padding minimum p-6."
+  },
+  "component_name": [
+    "SceneManager",
+    "ParallaxLayer",
+    "GlassNav",
+    "MaterialHotspot",
+    "ManifestoChapter",
+    "EditorialMarquee",
+    "CustomCursor"
+  ],
+  "grids": {
+    "bento_grid": "Used selectively in manifesto chapters: grid-cols-1 md:grid-cols-12 gap-8. Images span 8 cols, text spans 4 cols.",
+    "hotspot_layout": "Absolute positioning over relative containers (images). Coordinated via x/y percentages."
+  },
+  "layouts": {
+    "spacing_philosophy": "Generous Spacing. Use p-12, py-24, or py-32 for section padding. Negative space builds luxury.",
+    "scenes": [
+      {
+        "id": "intro",
+        "description": "Signature on-load moment. Masked line-by-line reveal of hero copy ('The Next Era of Living'). Dark background, elegant text."
+      },
+      {
+        "id": "scene_1_exterior",
+        "description": "Hero Exterior. Pinned 100vh section. Layered absolute images: sky, misty hills, house, foreground elements. As user scrolls, scale and translateZ are applied inversely to layers to create a dolly-in pseudo-3D effect."
+      },
+      {
+        "id": "manifesto_1",
+        "description": "Chapter 01 — The Land. Editorial section break with large numbers, rich text, and a clipped-frame image reveal."
+      },
+      {
+        "id": "scene_2_entrance",
+        "description": "Entrance. Camera approaches front door (scale up). Scroll triggers a blur-transition, the door image splits/fades, lighting shifts from natural to warm interior, simulating entering the home."
+      },
+      {
+        "id": "scene_3_kitchen",
+        "description": "Luxury Kitchen (primary showcase). Horizontal pan (translateX) linked to scroll. Features 'MaterialHotspot' glass cards pulsing over key elements (oak flooring, brass fixtures)."
+      },
+      {
+        "id": "editorial_marquee",
+        "description": "Slow continuous marquee: 'CRAFTED IN IRELAND · MODULAR · TIMELESS'. text-[#123524] on #FAF8F5 background."
+      },
+      {
+        "id": "scene_4_living_room",
+        "description": "Living Room. Warm atmosphere, fireplace. Minimal UI. Subtle parallax on windows showing exterior landscape moving slightly."
+      },
+      {
+        "id": "scene_5_exit_cta",
+        "description": "Exit / CTA. Drone-style pullback (scale down) revealing the landscape again. Central CTA: 'Book a Consultation' (pill button, luxury hover state)."
+      }
+    ]
+  },
+  "motion": {
+    "philosophy": "Simulate walking, breathing, weight, momentum. Never teleport. Use Power3.inOut or Expo.easeOut.",
+    "scroll_engine": "Lenis for smooth scrolling momentum. GSAP ScrollTrigger for pinning and scrubbing animations.",
+    "choreography": {
+      "entrance": "Elements reveal via clip-path (inset) from bottom to top, paired with subtle upward translation and scale-down from 1.05 to 1.0.",
+      "in_view": "Scrubbed parallax. Foreground elements move faster, background elements move slower.",
+      "exit": "Elements gently blur and fade as they move out of the focal plane."
+    },
+    "micro_interactions": "Hotspots pulse slowly. Hovering a hotspot scales it up (spring physics via Framer Motion) and reveals glass info card."
+  },
+  "accessibility": {
+    "focus_states": "All interactive elements (hotspots, nav, CTA) must have distinct focus rings or scale shifts.",
+    "aria": "Use aria-hidden='true' for purely decorative parallax elements. Hotspots must be button elements with descriptive aria-labels.",
+    "motion": "Respect prefers-reduced-motion: disable scroll-scrubbed pseudo-3D if requested.",
+    "audio": "Ambient audio toggle MUST start muted. Explicit user action required to play."
+  },
+  "media": {
+    "treatment": "Clipped-frame product photography. Images are wrapped in containers with overflow-hidden and scaled down from 1.2 to 1.0 on scroll. Never standard raw squares.",
+    "overlay": "Always use a subtle black/30 to black/50 overlay on hero background layers to ensure typography contrast."
+  },
+  "3d_libraries": {
+    "recommendation": "DO NOT USE WebGL/R3F as requested by the client. Rely on CSS transforms (perspective, translate3d, scale) powered by GSAP to create the illusion of depth (Pseudo-3D)."
+  },
+  "image_urls": {
+    "exterior": {
+      "url": "https://images.unsplash.com/photo-1780930090824-07c2b620f963?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODF8MHwxfHNlYXJjaHw0fHxpcmlzaCUyMGdyZWVuJTIwbWlzdHklMjBoaWxscyUyMGxhbmRzY2FwZXxlbnwwfHx8fDE3ODQ1MjMzMDh8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Irish misty hills background layer."
+    },
+    "cabin": {
+      "url": "https://images.pexels.com/photos/31666745/pexels-photo-31666745.jpeg",
+      "description": "Modern wood cabin exterior to serve as the modular home focal point."
+    },
+    "kitchen": {
+      "url": "https://images.unsplash.com/photo-1622372738946-62e02505feb3?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzNzl8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBtaW5pbWFsJTIwc2NhbmRpbmF2aWFuJTIwa2l0Y2hlbnxlbnwwfHx8fDE3ODQ1MjMzMDl8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Luxury minimal scandinavian kitchen for the panning hotspot scene."
+    },
+    "living_room": {
+      "url": "https://images.pexels.com/photos/36777507/pexels-photo-36777507.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Warm modern living room with fireplace for the ambient motion scene."
+    }
+  },
+  "component_path": [
+    "/app/src/components/ui/glass-nav.jsx",
+    "/app/src/components/ui/hotspot.jsx",
+    "/app/src/components/ui/scene-manager.jsx",
+    "/app/src/components/ui/parallax-layer.jsx",
+    "/app/src/components/ui/marquee.jsx"
+  ],
+  "instructions_to_main_agent": "Focus heavily on the GSAP ScrollTrigger implementation for the 5 scenes. The architecture should wrap the entire app in Lenis for smooth scrolling. Create a SceneManager component that handles pinned 100vh sections. Use absolute positioning and z-index for the pseudo-3D layers. Integrate Framer Motion purely for UI micro-interactions (like the pulsing hotspots and glass navigation) while keeping GSAP strictly for scroll-driven page structure. Strict adherence to the locked color palette and fonts is mandatory.",
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": "1. Do not center align the app container. 2. Every interaction needs micro-animations (hover states, transitions). 3. Apply a film grain overlay globally (opacity 0.04) using CSS. 4. Use 2-3x more spacing than feels comfortable. 5. Do not use generic standard box-shadows; use layered ambient shadows or strict glassmorphism. 6. The header nav must use glassmorphism (backdrop-blur-xl) and never a pure transparent background. 7. Add data-testid to all interactive elements."
+}
